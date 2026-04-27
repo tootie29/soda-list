@@ -1,0 +1,326 @@
+/* =============================================================================
+   Soda List — Rental Listings Grid + Tabs
+   Figma reference: node 198:191 (grid), node 198:587 (tabs)
+   ============================================================================= */
+
+/* =============================================================================
+   Tab navigation — pill style, brand-matched
+   ============================================================================= */
+
+.soda-tabs {
+    width: 100%;
+}
+
+/* Outer pill track */
+.soda-tabs__nav {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 5px;
+    background: #f3f0eb;
+    border-radius: 100px;
+    border: 1px solid rgba(216, 175, 40, 0.18);
+
+    /* Centre the pill on the page */
+    display: flex;
+    justify-content: center;
+    flex-wrap: nowrap;
+    width: fit-content;
+    margin: 0 auto 48px;
+}
+
+/* Each tab button */
+.soda-tabs__tab {
+    appearance: none;
+    background: transparent;
+    border: none;
+    border-radius: 100px;
+    padding: 11px 28px;
+    cursor: pointer;
+    outline: none;
+    position: relative;
+
+    font-family: 'Manrope', sans-serif;
+    font-weight: 500;
+    font-size: 15px;
+    line-height: 1;
+    letter-spacing: 0.02em;
+    color: #8a7f74;
+    white-space: nowrap;
+
+    transition: background 0.22s ease,
+                color      0.22s ease,
+                box-shadow 0.22s ease,
+                transform  0.15s ease;
+}
+
+/* Hover — inactive */
+.soda-tabs__tab:not(.is-active):hover {
+    background: rgba(216, 175, 40, 0.1);
+    color: #353434;
+}
+
+/* Focus ring — keyboard navigation */
+.soda-tabs__tab:focus-visible {
+    box-shadow: 0 0 0 3px rgba(216, 175, 40, 0.45);
+}
+
+/* Active pill */
+.soda-tabs__tab.is-active {
+    background: linear-gradient(
+        135deg,
+        #1c1510 0%,
+        #2e2017 100%
+    );
+    color: #fff;
+    font-weight: 700;
+    box-shadow:
+        0 4px 14px rgba(28, 21, 16, 0.28),
+        inset 0 1px 0 rgba(255,255,255,0.06);
+    transform: translateY(-1px);
+}
+
+/* Gold dot accent on the active tab label */
+.soda-tabs__tab.is-active::before {
+    content: '';
+    display: inline-block;
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #D8AF28;
+    margin-right: 8px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+    flex-shrink: 0;
+}
+
+/* ---- Responsive ----------------------------------------------------------- */
+
+/* Scrollable pill row on smaller screens */
+@media (max-width: 760px) {
+    .soda-tabs__nav {
+        width: calc(100% + 2px);
+        max-width: 100%;
+        overflow-x: auto;
+        overflow-y: visible;
+        justify-content: flex-start;
+        border-radius: 14px;
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+    }
+    .soda-tabs__nav::-webkit-scrollbar {
+        display: none;
+    }
+}
+
+@media (max-width: 480px) {
+    .soda-tabs__tab {
+        font-size: 13px;
+        padding: 10px 18px;
+    }
+}
+
+/* Tab panel fade-in when switching tabs */
+@keyframes soda-fadein {
+    from { opacity: 0; transform: translateY(6px); }
+    to   { opacity: 1; transform: translateY(0);   }
+}
+
+.soda-tabs .soda-list {
+    animation: soda-fadein 0.28s ease forwards;
+}
+
+/* ---- Grid ------------------------------------------------------------------ */
+
+.soda-list {
+    width: 100%;
+}
+
+.soda-list__grid {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 30px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+/* ---- Card ------------------------------------------------------------------ */
+
+.soda-list__card {
+    flex: 1 1 calc(33.333% - 20px);
+    min-width: 280px;
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+}
+
+/* ---- Image wrapper --------------------------------------------------------- */
+
+.soda-list__image-wrap {
+    position: relative;
+    width: 100%;
+    aspect-ratio: 440 / 474;   /* matches Figma card image proportions */
+    border-radius: 30px;
+    overflow: hidden;
+    flex-shrink: 0;
+}
+
+.soda-list__image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    border-radius: 30px;
+}
+
+/* ---- "Guest Favorite" badge ----------------------------------------------- */
+
+.soda-list__badge {
+    position: absolute;
+    top: 28px;
+    left: 25px;
+    height: 36px;
+    padding: 0 18px;
+    display: inline-flex;
+    align-items: center;
+    border-radius: 3px;
+    /* Base fill */
+    background-color: #ffe8b8;
+    /* Golden gradient overlay */
+    background-image: linear-gradient(
+        180deg,
+        rgba(138, 106, 0, 0.25)   33.912%,
+        rgba(223, 192, 85, 0.438) 15.639%,
+        rgba(233, 209, 116, 0.625) 6.569%,
+        rgba(231, 205, 109, 0.588) 27.427%,
+        rgba(212, 175, 55, 0.75)  50.955%,
+        rgb(216, 175, 40)         85.543%
+    );
+    font-family: 'Manrope', sans-serif;
+    font-weight: 700;
+    font-size: 18px;
+    line-height: 1.36;
+    color: #1c1510;
+    white-space: nowrap;
+}
+
+/* ---- Card body (below image) ---------------------------------------------- */
+
+.soda-list__card-body {
+    padding-top: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+/* Name + Rating row */
+.soda-list__card-meta {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+}
+
+.soda-list__card-name {
+    font-family: 'DM Serif Display', serif;
+    font-weight: 400;
+    font-style: normal;
+    font-size: 18px;
+    line-height: 1.36;
+    color: #353434;
+    margin: 0;
+    padding: 0;
+}
+
+/* Rating -------------------------------------------------------------------- */
+
+.soda-list__card-rating {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    flex-shrink: 0;
+}
+
+.soda-list__star {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+}
+
+.soda-list__rating-text {
+    font-family: 'Poppins', sans-serif;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 1.36;
+    color: #717171;
+    white-space: nowrap;
+}
+
+/* Beds / Baths -------------------------------------------------------------- */
+
+.soda-list__card-beds {
+    font-family: 'Manrope', sans-serif;
+    font-weight: 400;
+    font-size: 18px;
+    line-height: 1.36;
+    color: #353434;
+    margin: 0;
+    padding: 0;
+}
+
+/* ---- Card link ------------------------------------------------------------ */
+
+.soda-list__card-link {
+    display: flex;
+    flex-direction: column;
+    text-decoration: none;
+    color: inherit;
+    outline-offset: 4px;
+}
+
+.soda-list__card-link:hover .soda-list__image-wrap img,
+.soda-list__card-link:focus-visible .soda-list__image-wrap img {
+    transform: scale(1.03);
+    transition: transform 0.3s ease;
+}
+
+.soda-list__image-wrap img {
+    transition: transform 0.3s ease;
+}
+
+/* ---- Loading / Error states ----------------------------------------------- */
+
+.soda-list__state {
+    font-family: 'Manrope', sans-serif;
+    font-size: 16px;
+    color: #717171;
+    padding: 24px 0;
+    text-align: center;
+    width: 100%;
+}
+
+/* ---- Responsive ----------------------------------------------------------- */
+
+@media (max-width: 960px) {
+    .soda-list__card {
+        flex: 1 1 calc(50% - 15px);
+    }
+}
+
+@media (max-width: 600px) {
+    .soda-list__card {
+        flex: 1 1 100%;
+    }
+    .soda-list__badge {
+        font-size: 15px;
+        height: 30px;
+        padding: 0 14px;
+    }
+    .soda-list__card-name,
+    .soda-list__rating-text,
+    .soda-list__card-beds {
+        font-size: 15px;
+    }
+}
