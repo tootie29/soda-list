@@ -109,12 +109,62 @@
     }
 
     /* ---------------------------------------------------------------------- */
+    /* Diagnostic — test the *saved* URL                                      */
+    /* ---------------------------------------------------------------------- */
+
+    function initDiagnostic() {
+        const btn    = document.getElementById( 'sl-run-diag' );
+        const result = document.getElementById( 'sl-diag-result' );
+
+        if ( ! btn || ! result ) return;
+
+        btn.addEventListener( 'click', function () {
+            btn.disabled    = true;
+            btn.textContent = cfg.i18n.testing || 'Testing…';
+            setResult( result, cfg.i18n.testing || 'Testing…', 'loading' );
+
+            post( cfg.diagAction, { nonce: btn.dataset.nonce } )
+            .then( function ( res ) {
+                if ( ! res.success ) {
+                    setResult( result, '✗ Request error', 'error' );
+                    return;
+                }
+
+                const d = res.data;
+
+                if ( d.error ) {
+                    const msg = ( cfg.i18n.diagErr || 'Request failed: %s' )
+                        .replace( '%s', d.error );
+                    setResult( result, '✗ ' + msg, 'error' );
+                } else if ( d.units !== null ) {
+                    const msg = ( cfg.i18n.diagOk || 'HTTP %d — %d unit(s) returned.' )
+                        .replace( '%d', d.http_code )
+                        .replace( '%d', d.units );
+                    setResult( result, '✓ ' + msg, 'success' );
+                } else {
+                    const msg = ( cfg.i18n.diagFail || 'HTTP %d — no valid JSON (bot protection?).' )
+                        .replace( '%d', d.http_code );
+                    setResult( result, '✗ ' + msg, 'error' );
+                }
+            } )
+            .catch( function ( err ) {
+                setResult( result, '✗ ' + err.message, 'error' );
+            } )
+            .finally( function () {
+                btn.disabled    = false;
+                btn.textContent = 'Test Stored URL';
+            } );
+        } );
+    }
+
+    /* ---------------------------------------------------------------------- */
     /* Boot                                                                    */
     /* ---------------------------------------------------------------------- */
 
     document.addEventListener( 'DOMContentLoaded', function () {
         initTestConnection();
         initFlushCache();
+        initDiagnostic();
     } );
 
 } )();

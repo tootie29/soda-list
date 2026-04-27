@@ -99,6 +99,18 @@ class Soda_List_Shortcode {
     }
 
     // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /** Returns scheme + host derived from the saved API URL (e.g. https://go.vividsedona.com). */
+    private function rentals_base(): string {
+        $parsed = wp_parse_url( $this->settings->get_api_url() );
+        $scheme = $parsed['scheme'] ?? 'https';
+        $host   = $parsed['host']   ?? '';
+        return $host ? $scheme . '://' . $host : '';
+    }
+
+    // -------------------------------------------------------------------------
     // Data sanitization — only expose what the front-end needs
     // -------------------------------------------------------------------------
 
@@ -122,7 +134,7 @@ class Soda_List_Shortcode {
                 'city_name'   => sanitize_text_field( $unit['city_name']   ?? '' ),
                 'state_prov'  => sanitize_text_field( $unit['state_prov']  ?? '' ),
                 'featured'    => sanitize_text_field( $unit['featured']    ?? 'no' ),
-                'url'         => $id ? esc_url_raw( 'https://go.vividvacationrentals.com/rentals/' . $id ) : '',
+                'url'         => $id ? esc_url_raw( $this->rentals_base() . '/rentals/' . $id ) : '',
             ];
         }, $units );
     }

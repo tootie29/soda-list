@@ -217,20 +217,23 @@ class Soda_List_Settings {
     const SETTINGS_GROUP      = 'soda_list_group';
     const PAGE_SLUG           = 'soda-list';
 
-    // AJAX action
+    // AJAX actions
     const AJAX_TEST_ACTION    = 'soda_list_test_api';
+    const AJAX_DIAG_ACTION    = 'soda_list_diagnostic';
 
     public function init(): void {
         add_action( 'admin_menu',                      [ $this, 'add_menu' ] );
         add_action( 'admin_init',                      [ $this, 'register_settings' ] );
         add_action( 'admin_enqueue_scripts',           [ $this, 'enqueue_admin_assets' ] );
 
-        // Clear cache whenever the API URL is changed
+        // Clear cache when API URL is updated (existing option) or added (first save)
         add_action( 'update_option_' . self::OPTION_API_URL, [ $this, 'flush_api_cache' ] );
+        add_action( 'add_option_'    . self::OPTION_API_URL, [ $this, 'flush_api_cache' ] );
 
         // AJAX: test API connection (logged-in users only)
         add_action( 'wp_ajax_' . self::AJAX_TEST_ACTION,   [ $this, 'ajax_test_connection' ] );
         add_action( 'wp_ajax_soda_list_flush_cache',        [ $this, 'ajax_flush_cache' ] );
+        add_action( 'wp_ajax_' . self::AJAX_DIAG_ACTION,   [ $this, 'ajax_diagnostic' ] );
     }
 
     // -------------------------------------------------------------------------
@@ -568,6 +571,8 @@ class Soda_List_Settings {
                         </div>
                     </div>
 
+                    <?php $this->render_diagnostic_card(); ?>
+
                 </div><!-- .sl-col--sidebar -->
 
             </div><!-- .sl-body -->
@@ -602,6 +607,7 @@ class Soda_List_Settings {
         wp_localize_script( 'soda-list-admin', 'sodaListAdmin', [
             'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
             'testAction'     => self::AJAX_TEST_ACTION,
+            'diagAction'     => self::AJAX_DIAG_ACTION,
             'flushNonce'     => wp_create_nonce( 'soda_list_flush_cache' ),
             'flushAction'    => 'soda_list_flush_cache',
             'i18n'           => [
@@ -610,6 +616,9 @@ class Soda_List_Settings {
                 'error'      => __( 'Connection failed: %s', 'soda-list' ),
                 'flushed'    => __( 'Cache cleared.', 'soda-list' ),
                 'flushing'   => __( 'Clearing…', 'soda-list' ),
+                'diagOk'     => __( 'HTTP %d — %d unit(s) returned.', 'soda-list' ),
+                'diagFail'   => __( 'HTTP %d — no valid JSON (bot protection?).', 'soda-list' ),
+                'diagErr'    => __( 'Request failed: %s', 'soda-list' ),
             ],
         ] );
     }
@@ -645,13 +654,16 @@ class Soda_List_Settings {
             ] );
         }
 
-        $data = json_decode( wp_remote_retrieve_body( $response ), true );
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
 
-        if ( ! is_array( $data ) ) {
+        if ( ! is_array( $body ) ) {
             wp_send_json_error( [ 'message' => __( 'Invalid JSON response.', 'soda-list' ) ] );
         }
 
-        wp_send_json_success( [ 'count' => count( $data ) ] );
+        // API wraps units in a "data" key: { "data": [...] }
+        $units = isset( $body['data'] ) && is_array( $body['data'] ) ? $body['data'] : $body;
+
+        wp_send_json_success( [ 'count' => count( $units ) ] );
     }
 
     // -------------------------------------------------------------------------
@@ -675,11 +687,102 @@ class Soda_List_Settings {
     }
 
     // -------------------------------------------------------------------------
+    // AJAX: full diagnostic (tests the *saved* URL, not the form field)
+    // -------------------------------------------------------------------------
+
+    public function ajax_diagnostic(): void {
+        check_ajax_referer( self::AJAX_DIAG_ACTION, 'nonce' );
+
+        if ( ! current_user_can( 'manage_options' ) ) {
+            wp_send_json_error( null, 403 );
+        }
+
+        $url      = $this->get_api_url();
+        $response = wp_remote_get( $url, [ 'timeout' => 15 ] );
+
+        if ( is_wp_error( $response ) ) {
+            wp_send_json_success( [
+                'http_code' => 0,
+                'error'     => $response->get_error_message(),
+                'units'     => null,
+            ] );
+            return;
+        }
+
+        $code = (int) wp_remote_retrieve_response_code( $response );
+        $body = json_decode( wp_remote_retrieve_body( $response ), true );
+        $units = null;
+
+        if ( 200 === $code && is_array( $body ) ) {
+            $data  = isset( $body['data'] ) && is_array( $body['data'] ) ? $body['data'] : $body;
+            $units = count( $data );
+        }
+
+        wp_send_json_success( [
+            'http_code' => $code,
+            'error'     => null,
+            'units'     => $units,
+        ] );
+    }
+
+    // -------------------------------------------------------------------------
+    // Diagnostic sidebar card
+    // -------------------------------------------------------------------------
+
+    public function render_diagnostic_card(): void {
+        $stored_url    = $this->get_api_url();
+        $transient     = get_transient( Soda_List_API::CACHE_KEY );
+        $cache_exists  = is_array( $transient );
+        $cache_count   = $cache_exists ? count( $transient ) : 0;
+        ?>
+        <div class="sl-card">
+            <div class="sl-card__header">
+                <span class="dashicons dashicons-search sl-card__icon"></span>
+                <h2 class="sl-card__title"><?php esc_html_e( 'Diagnostics', 'soda-list' ); ?></h2>
+            </div>
+            <div class="sl-card__body">
+
+                <p class="sl-diag-label"><?php esc_html_e( 'Stored API URL', 'soda-list' ); ?></p>
+                <code class="sl-code sl-diag-url"><?php echo esc_html( $stored_url ); ?></code>
+
+                <p class="sl-diag-label" style="margin-top:14px"><?php esc_html_e( 'Transient Cache', 'soda-list' ); ?></p>
+                <p class="sl-diag-value <?php echo $cache_exists ? 'is-ok' : 'is-miss'; ?>">
+                    <?php if ( $cache_exists ) : ?>
+                        <?php echo esc_html( sprintf( __( 'HIT — %d unit(s) cached', 'soda-list' ), $cache_count ) ); ?>
+                    <?php else : ?>
+                        <?php esc_html_e( 'MISS — no cached data', 'soda-list' ); ?>
+                    <?php endif; ?>
+                </p>
+
+                <hr class="sl-divider" />
+
+                <button
+                    type="button"
+                    id="sl-run-diag"
+                    class="button sl-test-btn"
+                    data-nonce="<?php echo esc_attr( wp_create_nonce( self::AJAX_DIAG_ACTION ) ); ?>"
+                >
+                    <?php esc_html_e( 'Test Stored URL', 'soda-list' ); ?>
+                </button>
+                <div id="sl-diag-result" class="sl-test-result" aria-live="polite"></div>
+
+            </div>
+        </div>
+        <?php
+    }
+
+    // -------------------------------------------------------------------------
     // Sanitization
     // -------------------------------------------------------------------------
 
     public function sanitize_api_url( $value ): string {
         $url = esc_url_raw( trim( $value ) );
+
+        // Always flush the API cache whenever the URL field is saved —
+        // the sanitize callback fires on every form submission, so this is
+        // more reliable than update_option_* which skips on first save.
+        delete_transient( Soda_List_API::CACHE_KEY );
+
         return ! empty( $url ) ? $url : self::DEFAULT_API_URL;
     }
 

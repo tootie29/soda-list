@@ -112,6 +112,18 @@ class Soda_List_Tabs_Shortcode {
     }
 
     // -------------------------------------------------------------------------
+    // Helpers
+    // -------------------------------------------------------------------------
+
+    /** Returns scheme + host derived from the saved API URL (e.g. https://go.vividsedona.com). */
+    private function rentals_base(): string {
+        $parsed = wp_parse_url( $this->settings->get_api_url() );
+        $scheme = $parsed['scheme'] ?? 'https';
+        $host   = $parsed['host']   ?? '';
+        return $host ? $scheme . '://' . $host : '';
+    }
+
+    // -------------------------------------------------------------------------
     // Unit preparation
     // -------------------------------------------------------------------------
 
@@ -138,7 +150,7 @@ class Soda_List_Tabs_Shortcode {
                 'reviews'        => is_array( $unit['reviews'] ) ? count( $unit['reviews'] ) : 0,
                 'image'          => esc_url_raw( $images[0] ?? '' ),
                 'featured'       => sanitize_text_field( $unit['featured']    ?? 'no' ),
-                'url'            => $id ? esc_url_raw( 'https://go.vividvacationrentals.com/rentals/' . $id ) : '',
+                'url'            => $id ? esc_url_raw( $this->rentals_base() . '/rentals/' . $id ) : '',
                 // Used by Vue for pet_friendly special filter
                 'is_pet_friendly'=> strtolower( $unit['petfriendly'] ?? 'no' ) === 'yes',
                 // All amenity names (lowercase) — Vue matches filter values against this
