@@ -1,0 +1,190 @@
+/* =============================================================================
+   Soda Category — [soda_category] shortcode styles
+   Figma: node 3-606 — "Property 2" section
+   ============================================================================= */
+
+/* ---- Section wrapper ------------------------------------------------------- */
+
+.soda-cat {
+    font-family: 'Montserrat', sans-serif;
+    width: 100%;
+}
+
+/* ---- Grid ------------------------------------------------------------------ */
+
+.soda-cat__grid {
+    display: grid;
+    gap: 28px;
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.soda-cat__grid--cols-1 { grid-template-columns: 1fr; }
+.soda-cat__grid--cols-2 { grid-template-columns: repeat(2, 1fr); }
+.soda-cat__grid--cols-3 { grid-template-columns: repeat(3, 1fr); }
+.soda-cat__grid--cols-4 { grid-template-columns: repeat(4, 1fr); }
+
+/* ---- Card ------------------------------------------------------------------ */
+
+.soda-cat__item {
+    display: flex;
+}
+
+.soda-cat__card {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+}
+
+.soda-cat__card-link {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+    text-decoration: none;
+    color: inherit;
+}
+
+.soda-cat__card-link:hover,
+.soda-cat__card-link:focus {
+    text-decoration: none;
+    color: inherit;
+    outline: none;
+}
+
+/* ---- Card image ------------------------------------------------------------ */
+
+.soda-cat__image-wrap {
+    position: relative;
+    overflow: hidden;
+    border-radius: 30px;
+    aspect-ratio: 687 / 368;
+    background: #e8e4dd;
+    flex-shrink: 0;
+}
+
+.soda-cat__image-wrap img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+    transition: transform 0.45s ease;
+}
+
+.soda-cat__card-link:hover .soda-cat__image-wrap img {
+    transform: scale(1.05);
+}
+
+/* ---- Featured badge -------------------------------------------------------- */
+
+.soda-cat__badge {
+    position: absolute;
+    top: 16px;
+    left: 16px;
+    background: #fff;
+    color: #353434;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 12px;
+    font-weight: 700;
+    padding: 5px 14px;
+    border-radius: 20px;
+    letter-spacing: .02em;
+    pointer-events: none;
+}
+
+/* ---- Card body ------------------------------------------------------------- */
+
+.soda-cat__card-body {
+    padding: 18px 2px 0;
+}
+
+.soda-cat__card-meta {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 12px;
+    margin-bottom: 6px;
+}
+
+.soda-cat__card-name {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: #353434;
+    line-height: 1.36;
+    margin: 0;
+    padding: 0;
+    border: none;
+    flex: 1;
+}
+
+/* ---- Rating --------------------------------------------------------------- */
+
+.soda-cat__card-rating {
+    display: flex;
+    align-items: center;
+    gap: 5px;
+    flex-shrink: 0;
+}
+
+.soda-cat__star {
+    width: 22px;
+    height: 22px;
+    flex-shrink: 0;
+    display: block;
+}
+
+.soda-cat__rating-text {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: #717171;
+    line-height: 1.36;
+    white-space: nowrap;
+}
+
+/* ---- Beds / baths --------------------------------------------------------- */
+
+.soda-cat__card-beds {
+    font-family: 'Montserrat', sans-serif;
+    font-size: 18px;
+    font-weight: 400;
+    color: #717171;
+    line-height: 1.36;
+    margin: 0;
+}
+
+/* ---- Empty state ---------------------------------------------------------- */
+
+.soda-cat__empty {
+    color: #717171;
+    font-family: 'Montserrat', sans-serif;
+    font-size: 16px;
+    text-align: center;
+    padding: 48px 0;
+    margin: 0;
+}
+
+/* ---- Responsive ----------------------------------------------------------- */
+
+@media (max-width: 1024px) {
+    .soda-cat__grid--cols-4 {
+        grid-template-columns: repeat(3, 1fr);
+    }
+}
+
+@media (max-width: 900px) {
+    .soda-cat__grid--cols-3,
+    .soda-cat__grid--cols-4 {
+        grid-template-columns: repeat(2, 1fr);
+    }
+
+}
+
+@media (max-width: 600px) {
+    .soda-cat__grid--cols-2,
+    .soda-cat__grid--cols-3,
+    .soda-cat__grid--cols-4 {
+        grid-template-columns: 1fr;
+    }
+}

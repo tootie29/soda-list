@@ -348,12 +348,200 @@
 }
 
 .sl-sc-label {
-    font-size: 12px;
-    font-weight: 600;
+    font-size: 11px;
+    font-weight: 700;
     color: #50575e;
     margin: 0 0 4px;
     text-transform: uppercase;
-    letter-spacing: .04em;
+    letter-spacing: .05em;
+}
+
+.sl-sc-desc {
+    font-size: 12px;
+    color: #50575e;
+    margin: 0 0 6px;
+    line-height: 1.5;
+}
+
+.sl-sc-desc--muted {
+    color: #8c8f94;
+    margin-top: 8px;
+}
+
+.sl-sc-params {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 12px;
+    margin: 6px 0 8px;
+}
+
+.sl-sc-params td {
+    padding: 4px 6px;
+    vertical-align: top;
+    color: #50575e;
+    line-height: 1.5;
+}
+
+.sl-sc-params td:first-child {
+    white-space: nowrap;
+    padding-right: 10px;
+}
+
+.sl-sc-params td code {
+    background: #f0f0f1;
+    border: 1px solid #dcdcde;
+    border-radius: 3px;
+    padding: 1px 5px;
+    font-size: 11px;
+    color: #1c1510;
+}
+
+/* ---- Tab navigation ------------------------------------------------------- */
+
+.sl-tab-nav {
+    display: flex;
+    gap: 4px;
+    margin: 0 0 24px;
+    border-bottom: 2px solid #e2e4e7;
+    padding-bottom: 0;
+}
+
+.sl-tab-nav__item {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 10px 18px;
+    font-size: 13px;
+    font-weight: 600;
+    color: #50575e;
+    text-decoration: none;
+    border-radius: 6px 6px 0 0;
+    border: 1px solid transparent;
+    border-bottom: none;
+    margin-bottom: -2px;
+    transition: color .15s, background .15s;
+    line-height: 1;
+}
+
+.sl-tab-nav__item .dashicons {
+    font-size: 16px;
+    width: 16px;
+    height: 16px;
+    line-height: 1;
+}
+
+.sl-tab-nav__item:hover {
+    color: #1c1510;
+    background: #f6f7f7;
+    text-decoration: none;
+}
+
+.sl-tab-nav__item.is-active {
+    color: #1c1510;
+    background: #fff;
+    border-color: #e2e4e7;
+    border-bottom-color: #fff;
+}
+
+/* ---- Custom CSS editor ---------------------------------------------------- */
+
+.sl-css-wrap {
+    max-width: 900px;
+}
+
+.sl-css-editor-card {
+    background: #fff;
+    border: 1px solid #e2e4e7;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 1px 3px rgba(0,0,0,.06);
+}
+
+.sl-css-editor-header {
+    display: flex;
+    align-items: flex-start;
+    gap: 14px;
+    padding: 20px 24px;
+    border-bottom: 1px solid #e2e4e7;
+    background: #f9fafb;
+}
+
+.sl-css-editor-icon {
+    font-size: 22px;
+    color: #D8AF28;
+    flex-shrink: 0;
+    margin-top: 2px;
+    line-height: 1;
+    width: auto;
+    height: auto;
+}
+
+.sl-css-editor-title {
+    font-size: 14px;
+    font-weight: 600;
+    color: #1e1e1e;
+    margin: 0 0 4px;
+    padding: 0;
+    border: none;
+}
+
+.sl-css-editor-desc {
+    font-size: 12px;
+    color: #787c82;
+    margin: 0;
+    line-height: 1.5;
+}
+
+.sl-css-editor-body {
+    padding: 0;
+}
+
+/* Plain textarea fallback (shown if CodeMirror doesn't init) */
+.sl-css-textarea {
+    display: block;
+    width: 100%;
+    min-height: 420px;
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    color: #1e1e1e;
+    background: #1e1e2e;
+    color: #cdd6f4;
+    border: none;
+    border-radius: 0;
+    padding: 20px;
+    resize: vertical;
+    box-sizing: border-box;
+    tab-size: 4;
+    outline: none;
+    box-shadow: none;
+}
+
+/* CodeMirror overrides to fill the card */
+.sl-css-editor-body .CodeMirror {
+    font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 13px;
+    line-height: 1.6;
+    height: 420px;
+    border: none;
+    border-radius: 0;
+}
+
+.sl-css-editor-footer {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px 24px;
+    border-top: 1px solid #e2e4e7;
+    background: #f9fafb;
+    flex-wrap: wrap;
+}
+
+.sl-css-hint {
+    font-size: 12px;
+    color: #8c8f94;
+    flex: 1 1 0;
+    min-width: 0;
 }
 
 /* ---- Diagnostics card ----------------------------------------------------- */

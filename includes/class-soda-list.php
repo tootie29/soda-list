@@ -16,5 +16,7 @@ class Soda_List {
 
         ( new Soda_List_Shortcode( $api, $settings ) )->init();
         ( new Soda_List_Tabs_Shortcode( $api, $settings ) )->init();
+        ( new Soda_Category_Shortcode( $api, $settings ) )->init();
+        ( new Soda_Petfriendly_Shortcode( $api, $settings ) )->init();
     }
 }

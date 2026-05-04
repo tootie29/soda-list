@@ -18,6 +18,7 @@ class Soda_List_Settings {
     const OPTION_COUNT        = 'soda_list_count';
     const OPTION_TABS         = 'soda_list_tabs_config';
     const OPTION_TAB_COUNT    = 'soda_list_tab_count';
+    const OPTION_CUSTOM_CSS   = 'soda_list_custom_css';
 
     // Defaults
     const DEFAULT_API_URL     = 'https://go.vividvacationrentals.com/api/units?api_token=OB1yh7OUMKcaXWb9lsmQGGKez28pjhnz96hJgHybqh3ktd0W49brzPh4sBVgqkoR';
@@ -215,6 +216,7 @@ class Soda_List_Settings {
 
     // WP settings identifiers
     const SETTINGS_GROUP      = 'soda_list_group';
+    const SETTINGS_GROUP_CSS  = 'soda_list_group_css';
     const PAGE_SLUG           = 'soda-list';
 
     // AJAX actions
@@ -234,6 +236,9 @@ class Soda_List_Settings {
         add_action( 'wp_ajax_' . self::AJAX_TEST_ACTION,   [ $this, 'ajax_test_connection' ] );
         add_action( 'wp_ajax_soda_list_flush_cache',        [ $this, 'ajax_flush_cache' ] );
         add_action( 'wp_ajax_' . self::AJAX_DIAG_ACTION,   [ $this, 'ajax_diagnostic' ] );
+
+        // Output custom CSS after all plugin stylesheets (footer = always last in cascade)
+        add_action( 'wp_footer', [ $this, 'output_custom_css' ], 5 );
     }
 
     // -------------------------------------------------------------------------
@@ -306,6 +311,13 @@ class Soda_List_Settings {
             'type'              => 'integer',
             'default'           => self::DEFAULT_TAB_COUNT,
             'sanitize_callback' => [ $this, 'sanitize_count' ],
+        ] );
+
+        /* --- Custom CSS ------------------------------------------------------- */
+        register_setting( self::SETTINGS_GROUP_CSS, self::OPTION_CUSTOM_CSS, [
+            'type'              => 'string',
+            'default'           => '',
+            'sanitize_callback' => [ $this, 'sanitize_custom_css' ],
         ] );
     }
 
@@ -456,6 +468,8 @@ class Soda_List_Settings {
         if ( ! current_user_can( 'manage_options' ) ) {
             return;
         }
+
+        $active_tab = isset( $_GET['tab'] ) && 'custom-css' === $_GET['tab'] ? 'custom-css' : 'settings';
         ?>
         <div class="wrap sl-wrap">
 
@@ -469,6 +483,24 @@ class Soda_List_Settings {
                     <span class="sl-header__version">v<?php echo esc_html( SODA_LIST_VERSION ); ?></span>
                 </div>
             </div>
+
+            <!-- Tab navigation -->
+            <nav class="sl-tab-nav" aria-label="<?php esc_attr_e( 'Settings sections', 'soda-list' ); ?>">
+                <a href="<?php echo esc_url( admin_url( 'options-general.php?page=' . self::PAGE_SLUG . '&tab=settings' ) ); ?>"
+                   class="sl-tab-nav__item <?php echo 'settings' === $active_tab ? 'is-active' : ''; ?>">
+                    <span class="dashicons dashicons-admin-settings"></span>
+                    <?php esc_html_e( 'Settings', 'soda-list' ); ?>
+                </a>
+                <a href="<?php echo esc_url( admin_url( 'options-general.php?page=' . self::PAGE_SLUG . '&tab=custom-css' ) ); ?>"
+                   class="sl-tab-nav__item <?php echo 'custom-css' === $active_tab ? 'is-active' : ''; ?>">
+                    <span class="dashicons dashicons-editor-code"></span>
+                    <?php esc_html_e( 'Custom CSS', 'soda-list' ); ?>
+                </a>
+            </nav>
+
+            <?php if ( 'custom-css' === $active_tab ) : ?>
+            <?php $this->render_custom_css_tab(); ?>
+            <?php else : ?>
 
             <div class="sl-body">
 
@@ -541,13 +573,74 @@ class Soda_List_Settings {
                             <h2 class="sl-card__title"><?php esc_html_e( 'Shortcode Usage', 'soda-list' ); ?></h2>
                         </div>
                         <div class="sl-card__body">
-                            <p class="sl-sc-label"><?php esc_html_e( 'Listings grid:', 'soda-list' ); ?></p>
+
+                            <!-- soda_list -->
+                            <p class="sl-sc-label"><?php esc_html_e( 'Listings Grid', 'soda-list' ); ?></p>
+                            <p class="sl-sc-desc"><?php esc_html_e( 'Displays a random grid of rental listings.', 'soda-list' ); ?></p>
                             <code class="sl-code">[soda_list]</code>
+                            <p class="sl-sc-desc sl-sc-desc--muted"><?php esc_html_e( 'Override the default count:', 'soda-list' ); ?></p>
                             <code class="sl-code">[soda_list count="4"]</code>
 
-                            <p class="sl-sc-label" style="margin-top:16px"><?php esc_html_e( 'Tabbed listings:', 'soda-list' ); ?></p>
+                            <hr class="sl-divider" />
+
+                            <!-- soda_tabs -->
+                            <p class="sl-sc-label"><?php esc_html_e( 'Tabbed Listings', 'soda-list' ); ?></p>
+                            <p class="sl-sc-desc"><?php esc_html_e( 'Displays listings in filterable tabs. Configure the tabs below.', 'soda-list' ); ?></p>
                             <code class="sl-code">[soda_tabs]</code>
+                            <p class="sl-sc-desc sl-sc-desc--muted"><?php esc_html_e( 'Override listings per tab:', 'soda-list' ); ?></p>
                             <code class="sl-code">[soda_tabs count="9"]</code>
+
+                            <hr class="sl-divider" />
+
+                            <!-- soda_category -->
+                            <p class="sl-sc-label"><?php esc_html_e( 'Category Grid', 'soda-list' ); ?></p>
+                            <p class="sl-sc-desc"><?php esc_html_e( 'Displays listings filtered by a single category in a multi-column grid.', 'soda-list' ); ?></p>
+
+                            <table class="sl-sc-params">
+                                <tbody>
+                                    <tr>
+                                        <td><code>category</code></td>
+                                        <td><?php esc_html_e( 'Amenity name, "pet_friendly", or "az_rental"', 'soda-list' ); ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>columns</code></td>
+                                        <td><?php esc_html_e( 'Number of columns: 1, 2, 3, or 4', 'soda-list' ); ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>count</code></td>
+                                        <td><?php esc_html_e( 'Max listings to show', 'soda-list' ); ?></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <p class="sl-sc-desc sl-sc-desc--muted"><?php esc_html_e( 'Examples:', 'soda-list' ); ?></p>
+                            <code class="sl-code">[soda_category category="Swimming" columns="2" count="6"]</code>
+                            <code class="sl-code">[soda_category category="Hot Tub" columns="3" count="9"]</code>
+                            <code class="sl-code">[soda_category category="az_rental" columns="4" count="8"]</code>
+
+                            <hr class="sl-divider" />
+
+                            <!-- soda_petfriendly -->
+                            <p class="sl-sc-label"><?php esc_html_e( 'Pet-Friendly Listings', 'soda-list' ); ?></p>
+                            <p class="sl-sc-desc"><?php esc_html_e( 'Displays only listings where the pet-friendly field is "Yes".', 'soda-list' ); ?></p>
+
+                            <table class="sl-sc-params">
+                                <tbody>
+                                    <tr>
+                                        <td><code>columns</code></td>
+                                        <td><?php esc_html_e( 'Number of columns: 1, 2, 3, or 4', 'soda-list' ); ?></td>
+                                    </tr>
+                                    <tr>
+                                        <td><code>count</code></td>
+                                        <td><?php esc_html_e( 'Max listings to show', 'soda-list' ); ?></td>
+                                    </tr>
+                                </tbody>
+                            </table>
+
+                            <p class="sl-sc-desc sl-sc-desc--muted"><?php esc_html_e( 'Examples:', 'soda-list' ); ?></p>
+                            <code class="sl-code">[soda_petfriendly]</code>
+                            <code class="sl-code">[soda_petfriendly columns="3" count="9"]</code>
+
                         </div>
                     </div>
 
@@ -576,6 +669,9 @@ class Soda_List_Settings {
                 </div><!-- .sl-col--sidebar -->
 
             </div><!-- .sl-body -->
+
+            <?php endif; ?>
+
         </div><!-- .sl-wrap -->
         <?php
     }
@@ -603,6 +699,32 @@ class Soda_List_Settings {
             SODA_LIST_VERSION,
             true
         );
+
+        // CodeMirror CSS editor — only on the Custom CSS tab
+        if ( isset( $_GET['tab'] ) && 'custom-css' === $_GET['tab'] ) {
+            wp_enqueue_script( 'wp-codemirror' );
+            wp_enqueue_style( 'wp-codemirror' );
+
+            wp_add_inline_script(
+                'wp-codemirror',
+                'document.addEventListener("DOMContentLoaded", function() {
+                    var textarea = document.getElementById(' . wp_json_encode( self::OPTION_CUSTOM_CSS ) . ');
+                    if ( ! textarea || typeof wp === "undefined" || ! wp.CodeMirror ) return;
+                    var editor = wp.CodeMirror.fromTextArea( textarea, {
+                        mode: "css",
+                        lineNumbers: true,
+                        indentUnit: 4,
+                        tabSize: 4,
+                        indentWithTabs: false,
+                        lineWrapping: false,
+                        theme: "default",
+                        extraKeys: { Tab: function(cm) { cm.replaceSelection("    "); } }
+                    });
+                    editor.on("change", function() { editor.save(); });
+                    editor.setSize("100%", 420);
+                });'
+            );
+        }
 
         wp_localize_script( 'soda-list-admin', 'sodaListAdmin', [
             'ajaxUrl'        => admin_url( 'admin-ajax.php' ),
@@ -772,6 +894,67 @@ class Soda_List_Settings {
     }
 
     // -------------------------------------------------------------------------
+    // Custom CSS tab
+    // -------------------------------------------------------------------------
+
+    public function render_custom_css_tab(): void {
+        $css = $this->get_custom_css();
+        ?>
+        <div class="sl-css-wrap">
+            <form method="post" action="options.php" novalidate>
+                <?php settings_fields( self::SETTINGS_GROUP_CSS ); ?>
+
+                <div class="sl-css-editor-card">
+                    <div class="sl-css-editor-header">
+                        <span class="dashicons dashicons-editor-code sl-css-editor-icon"></span>
+                        <div>
+                            <h2 class="sl-css-editor-title"><?php esc_html_e( 'Custom CSS', 'soda-list' ); ?></h2>
+                            <p class="sl-css-editor-desc">
+                                <?php esc_html_e( 'Add custom CSS to override the default listing styles. This is injected into the front end on every page.', 'soda-list' ); ?>
+                            </p>
+                        </div>
+                    </div>
+                    <div class="sl-css-editor-body">
+                        <textarea
+                            id="<?php echo esc_attr( self::OPTION_CUSTOM_CSS ); ?>"
+                            name="<?php echo esc_attr( self::OPTION_CUSTOM_CSS ); ?>"
+                            class="sl-css-textarea"
+                            rows="24"
+                            spellcheck="false"
+                            autocomplete="off"
+                            autocorrect="off"
+                            autocapitalize="off"
+                            placeholder="/* Your custom CSS here */&#10;&#10;.soda-list__card { border-radius: 8px; }&#10;.soda-tabs__tab.is-active { background: #your-color; }"
+                        ><?php echo esc_textarea( $css ); ?></textarea>
+                    </div>
+                    <div class="sl-css-editor-footer">
+                        <?php submit_button( __( 'Save CSS', 'soda-list' ), 'primary sl-save-btn', 'submit', false ); ?>
+                        <span class="sl-css-hint">
+                            <?php esc_html_e( 'Changes are applied immediately on save. Use your browser\'s inspector to find class names to target.', 'soda-list' ); ?>
+                        </span>
+                    </div>
+                </div>
+
+            </form>
+        </div>
+        <?php
+    }
+
+    // -------------------------------------------------------------------------
+    // Output custom CSS on the front end
+    // -------------------------------------------------------------------------
+
+    public function output_custom_css(): void {
+        $css = $this->get_custom_css();
+        if ( '' === trim( $css ) ) {
+            return;
+        }
+        echo '<style id="soda-list-custom-css">' . "\n";
+        echo $css . "\n";
+        echo '</style>' . "\n";
+    }
+
+    // -------------------------------------------------------------------------
     // Sanitization
     // -------------------------------------------------------------------------
 
@@ -791,6 +974,11 @@ class Soda_List_Settings {
         return $n > 0 ? $n : self::DEFAULT_COUNT;
     }
 
+    public function sanitize_custom_css( $value ): string {
+        // Strip any HTML/PHP tags — preserves valid CSS syntax
+        return wp_strip_all_tags( (string) $value );
+    }
+
     // -------------------------------------------------------------------------
     // Getters
     // -------------------------------------------------------------------------
@@ -805,6 +993,10 @@ class Soda_List_Settings {
 
     public function get_tab_count(): int {
         return (int) get_option( self::OPTION_TAB_COUNT, self::DEFAULT_TAB_COUNT );
+    }
+
+    public function get_custom_css(): string {
+        return (string) get_option( self::OPTION_CUSTOM_CSS, '' );
     }
 
     /** Returns the full tabs config array (all 4 slots). */

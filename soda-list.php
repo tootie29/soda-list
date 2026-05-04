@@ -21,6 +21,8 @@ require_once SODA_LIST_PATH . 'includes/class-soda-api.php';
 require_once SODA_LIST_PATH . 'includes/class-soda-settings.php';
 require_once SODA_LIST_PATH . 'includes/class-soda-shortcode.php';
 require_once SODA_LIST_PATH . 'includes/class-soda-tabs-shortcode.php';
+require_once SODA_LIST_PATH . 'includes/class-soda-category-shortcode.php';
+require_once SODA_LIST_PATH . 'includes/class-soda-petfriendly-shortcode.php';
 require_once SODA_LIST_PATH . 'includes/class-soda-list.php';
 
 // Temporary: log fatal errors to wp-content/soda-debug.log
