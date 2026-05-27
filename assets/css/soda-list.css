@@ -149,8 +149,8 @@
 /* ---- Card ------------------------------------------------------------------ */
 
 .soda-list__card {
-    flex: 1 1 calc(33.333% - 20px);
-    min-width: 280px;
+    max-width: 100%;
+    width: 100%;
     display: flex;
     flex-direction: column;
     gap: 0;
@@ -303,16 +303,19 @@
 
 /* ---- Responsive ----------------------------------------------------------- */
 
-@media (max-width: 960px) {
+@media (min-width: 630px) {
     .soda-list__card {
-        flex: 1 1 calc(50% - 15px);
+        max-width: calc(50% - (30px * 1 / 2));
+    }
+}
+
+@media (min-width: 961px) {
+    .soda-list__card {
+        max-width: calc(33.33% - (30px * 2 / 3));
     }
 }
 
 @media (max-width: 600px) {
-    .soda-list__card {
-        flex: 1 1 100%;
-    }
     .soda-list__badge {
         font-size: 15px;
         height: 30px;
